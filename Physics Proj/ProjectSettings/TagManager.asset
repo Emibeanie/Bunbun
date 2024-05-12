@@ -9,6 +9,7 @@ TagManager:
   - WindyArea
   - End
   - Obstacle
+  - Carrot
   layers:
   - Default
   - TransparentFX

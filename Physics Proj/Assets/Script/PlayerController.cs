@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -25,8 +26,12 @@ public class PlayerController : MonoBehaviour
     public Transform groundCheckRayPoint, horizontalCheckRayPoint;
     public LayerMask groundLayer;
     public GameObject startPanel;
-    bool gameStarted = false;
-    
+    public bool gameStarted = false;
+    float carrotCount = 0;
+    public TextMeshProUGUI carrotCountText;
+    public GameObject deathPanel;
+    HashSet<Collider2D> countedCarrots = new HashSet<Collider2D>(); // Keep track of counted carrots
+    [SerializeField] AudioSource carrotSound;
 
     void Update()
     {
@@ -35,7 +40,8 @@ public class PlayerController : MonoBehaviour
         CheckHorizontalCollision();
         ApplyMovement();
         EndZone();
-
+        HitObstacle();
+        Carrot();
         Debug.Log(movement);
     }
 
@@ -83,20 +89,16 @@ public class PlayerController : MonoBehaviour
 
         if (isInWidyArea())
         {
-            // Randomly determine direction (left or right)
             float randomDirection = Random.Range(0, 2) == 0 ? -1 : 1;
 
-            // Calculate wind force (in horizontal direction)
             float windForce = randomDirection * windStrength * Time.deltaTime;
 
-            // Apply wind force to the player's horizontal movement
             normalMovementSpeed += windForce;
             Debug.Log(normalMovementSpeed);
         }
 
         if (isInLowGravityArea())
         {
-            // Reduce the vertical speed to simulate lower gravity
             verticalSpeed *= lowGravityMultiplier;
         }
 
@@ -149,7 +151,7 @@ public class PlayerController : MonoBehaviour
         }
         return false;
     }
-    bool isStopped() ///////
+    void HitObstacle()
     {
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 0.5f);
         foreach (Collider2D collider in colliders)
@@ -157,10 +159,10 @@ public class PlayerController : MonoBehaviour
             if (collider.CompareTag("Obstacle"))
             {
                 Debug.Log("Hit Obstacle");
-                return true;
+                deathPanel.SetActive(true);
+                gameStarted = false;
             }
         }
-        return false;
     }
 
     bool isInEnd()
@@ -184,7 +186,22 @@ public class PlayerController : MonoBehaviour
             transform.position = new Vector2(-16.05016f, -4.9f);
         }
     }
-
+    void Carrot()
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 0.5f);
+        foreach (Collider2D collider in colliders)
+        {
+            if (collider.CompareTag("Carrot") && !countedCarrots.Contains(collider))
+            {
+                carrotCount++;
+                carrotSound.Play();
+                Debug.Log("Carrots:" + carrotCount);
+                countedCarrots.Add(collider);
+                Destroy(collider.gameObject);
+                carrotCountText.text = carrotCount.ToString();
+            }
+        }
+    }
     private void OnDrawGizmos()
     {
         Gizmos.DrawRay(groundCheckRayPoint.position, -Vector2.up * 0.2f);

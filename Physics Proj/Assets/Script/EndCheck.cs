@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class EndCheck : MonoBehaviour
 {
-    public Vector2 targetPosition; // Target position to move the player
+    public Vector2 targetPosition;
 
     void OnCollisionEnter(Collision collision)
     {
